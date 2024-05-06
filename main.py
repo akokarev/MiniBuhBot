@@ -19,8 +19,8 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name('.env/credentials
 client = gspread.authorize(credentials)
 
 # Открытие таблицы по URL
-sheet = client.open_by_url(settings['spreadsheet_url']).worksheet(settings['worksheet'])
-stat = client.open_by_url(settings['spreadsheet_url']).worksheet(settings['statsheet'])
+worksheet = client.open_by_url(settings['spreadsheet_url']).worksheet(settings['worksheet'])
+statsheet = client.open_by_url(settings['spreadsheet_url']).worksheet(settings['statsheet'])
 
 #Функция обрезки лишних символов на конце строки
 def cutlast(s, tail):
@@ -53,12 +53,15 @@ def start(update, context):
 # Функция отправки статистики
 def stat(update, context):
     [chat_id, msg_id, msg_date] = getMsgInfo(update)
+    total = statsheet.acell('C2').value
+    reply = "Статистика:"
+    i = 5
     
-    update.message.reply_text('Статистика:')
+    reply += "\nИтого: "+total
+    update.message.reply_text()
 
 # Функция для сохранения данных в Google таблице
 def save_data(update, context):
-    print(update)
     [chat_id, msg_id, msg_date] = getMsgInfo(update)
     
     data = update.message.text.split()
@@ -74,7 +77,7 @@ def save_data(update, context):
     if cost.isnumeric() and event:
         row = [msg_id, msg_date, event, cost]
         print(row)
-        appended_row = sheet.append_row(row, value_input_option='USER_ENTERED')
+        appended_row = worksheet.append_row(row, value_input_option='USER_ENTERED')
         answer = update.message.reply_text('Данные успешно сохранены в Google таблице.')
         
     else:
