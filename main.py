@@ -20,7 +20,7 @@ client = gspread.authorize(credentials)
 
 # Открытие таблицы по URL
 sheet = client.open_by_url(settings['spreadsheet_url']).worksheet(settings['worksheet'])
-
+stat = client.open_by_url(settings['spreadsheet_url']).worksheet(settings['statsheet'])
 
 #Функция обрезки лишних символов на конце строки
 def cutlast(s, tail):
@@ -35,19 +35,31 @@ def cutbetween(a, b, text):
         return m.group(1)
     else:
         return false
+
+# Функция получения основных данных о сообщении
+def getMsgInfo(update):
+    print(update)
+    chat_id = update.message.chat.id
+    msg_id = update.message.message_id
+    msg_date_utc = update.message.forward_date if update.message.forward_date else update.message.date
+    tz = pytz.timezone('Europe/Moscow')
+    msg_date = msg_date_utc.astimezone(tz).strftime("%d.%m.%Y")
+    return [chat_id, msg_id, msg_date]
         
 # Функция для обработки команды /start
 def start(update, context):
-    update.message.reply_text('Привет! Отправь мне данные о пройденном километраже, имени события и его стоимости.')
+    update.message.reply_text('Привет! Отправь мне данные в формате: {наименование расхода} {стоимость}руб.')
+
+# Функция отправки статистики
+def stat(update, context):
+    [chat_id, msg_id, msg_date] = getMsgInfo(update)
+    
+    update.message.reply_text('Статистика:')
 
 # Функция для сохранения данных в Google таблице
 def save_data(update, context):
     print(update)
-    chat_id = update.message.chat.id
-    msg_id = update.message.message_id
-    date_msg_utc = update.message.forward_date if update.message.forward_date else update.message.date
-    tz = pytz.timezone('Europe/Moscow')
-    date_msg = date_msg_utc.astimezone(tz)
+    [chat_id, msg_id, msg_date] = getMsgInfo(update)
     
     data = update.message.text.split()
     cost = data.pop(-1)
@@ -57,17 +69,12 @@ def save_data(update, context):
     cost = cutlast(cost, 'р')
 
     event = ' '.join(data)
-    msg_time = date_msg.strftime("%d.%m.%Y") #("%Y-%m-%d-%H:%M")
     
     answer = False
     if cost.isnumeric() and event:
-        row = [msg_id, msg_time, event, cost]
+        row = [msg_id, msg_date, event, cost]
         print(row)
         appended_row = sheet.append_row(row, value_input_option='USER_ENTERED')
-        #col_A = cutbetween('!', ':', appended_row['updates']['updatedRange'])
-        #print(col_A)
-        
-        #sheet.format(col_A, {'numberFormat': {'type': 'DATE'}})
         answer = update.message.reply_text('Данные успешно сохранены в Google таблице.')
         
     else:
@@ -84,6 +91,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 updater = Updater(settings['bottoken'])
 dispatcher = updater.dispatcher
 dispatcher.add_handler(CommandHandler('start', start))
+dispatcher.add_handler(CommandHandler('stat', stat))
 dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, save_data))
 
 # Запуск бота
