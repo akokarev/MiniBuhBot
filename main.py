@@ -38,7 +38,7 @@ def cutbetween(a, b, text):
 
 # Функция получения основных данных о сообщении
 def getMsgInfo(update):
-    print(update)
+    #print(update)
     chat_id = update.message.chat.id
     msg_id = update.message.message_id
     msg_date_utc = update.message.forward_date if update.message.forward_date else update.message.date
@@ -54,11 +54,22 @@ def start(update, context):
 def stat(update, context):
     [chat_id, msg_id, msg_date] = getMsgInfo(update)
     total = statsheet.acell('C2').value
-    reply = "Статистика:"
-    i = 5
+    reply = "Статистика за текущий месяц:"
+    byCat = statsheet.get('D5:E')
     
-    reply += "\nИтого: "+total
-    update.message.reply_text()
+    #выравнивание строк
+    maxlen = 0
+    for row in byCat:
+        if maxlen < len(row[0]):
+            maxlen = len(row[0])
+    
+    for row in byCat:
+        reply += "\n" + row[0]
+        for i in range(maxlen-len(row[0])):
+            reply += '  '
+        reply += ' '+row[1]+' руб.'
+    reply += "\nИтого: "+total+' руб.'
+    update.message.reply_text(reply)
 
 # Функция для сохранения данных в Google таблице
 def save_data(update, context):
