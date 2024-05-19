@@ -1,0 +1,16 @@
+# Exported from Render on 2024-05-19T20:24:22Z
+services:
+- type: web
+  name: MiniBuhBot
+  runtime: python
+  repo: https://github.com/akokarev/MiniBuhBot
+  plan: free
+  envVars:
+  - key: settings.json
+    sync: false
+  - key: credentials.json
+    sync: false
+  region: oregon
+  buildCommand: pip install -r requirements.txt
+  startCommand: python main.py
+version: "1"
