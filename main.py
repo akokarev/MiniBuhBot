@@ -10,12 +10,12 @@ import json
 import re
 
 # Загрузка настроек
-with open('.env/settings.json') as json_file:
+with open('/etc/secrets/settings.json') as json_file:
     settings = json.load(json_file)
 
 # Подключение к Google Sheets API
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-credentials = ServiceAccountCredentials.from_json_keyfile_name('.env/credentials.json', scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name('/etc/secrets/credentials.json', scope)
 client = gspread.authorize(credentials)
 
 # Открытие таблицы по URL
