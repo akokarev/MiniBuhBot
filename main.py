@@ -8,7 +8,6 @@ import datetime
 import pytz
 import json
 import re
-import socket
 
 # Загрузка настроек
 with open('/etc/secrets/settings.json') as json_file:
@@ -109,23 +108,31 @@ dispatcher.add_handler(CommandHandler('start', start))
 dispatcher.add_handler(CommandHandler('stat', stat))
 dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, save_data))
 
+# Занимаем порт (для бесплатного тарифа render.com
+import threading
+import socket
+
+def WebServer():
+    sock = socket.socket()
+    sock.bind(('0.0.0.0', 10000))
+    sock.listen(1)
+    conn, addr = sock.accept()
+
+    print('connected:', addr)
+
+    while True:
+        data = conn.recv(1024)
+        if not data:
+            break
+        conn.send(data.upper())
+
+    conn.close()
+
+webserver_thread = threading.Thread(target=WebServer, name="WebServer")
+webserver_thread.start()
+
 # Запуск бота
 updater.start_polling()
 updater.idle()
 
 
-# Занимаем порт (для бесплатного тарифа render.com
-sock = socket.socket()
-sock.bind(('0.0.0.0', 10000))
-sock.listen(1)
-conn, addr = sock.accept()
-
-print('connected:', addr)
-
-while True:
-    data = conn.recv(1024)
-    if not data:
-        break
-    conn.send(data.upper())
-
-conn.close()
