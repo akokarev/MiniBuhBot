@@ -116,7 +116,7 @@ updater.idle()
 
 # Занимаем порт (для бесплатного тарифа render.com
 sock = socket.socket()
-sock.bind(('', 10000))
+sock.bind(('0.0.0.0', 10000))
 sock.listen(1)
 conn, addr = sock.accept()
 
